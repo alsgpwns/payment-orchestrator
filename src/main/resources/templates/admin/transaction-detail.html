@@ -1,0 +1,48 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Transaction Detail</title>
+    <style>
+        body { font-family: Arial; margin: 24px; }
+        .box { border: 1px solid #eee; padding: 16px; border-radius: 8px; margin-bottom: 18px; }
+        .muted { color: #777; font-size: 12px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border-bottom: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #f7f7f7; }
+    </style>
+</head>
+<body>
+
+<a href="/admin/transactions">← Back</a>
+
+<h2>Transaction Detail</h2>
+
+<div class="box">
+    <div><b>TxId</b> : <span th:text="${tx.id}"></span></div>
+    <div><b>Status</b> : <span th:text="${tx.status}"></span></div>
+    <div><b>Merchant</b> : <span th:text="${tx.merchantId}"></span></div>
+    <div><b>Amount</b> : <span th:text="${tx.amount}"></span> <span th:text="${tx.currency}"></span></div>
+    <div class="muted"><b>CreatedAt</b> : <span th:text="${tx.createdAt}"></span></div>
+</div>
+
+<h3>Event Timeline</h3>
+<table>
+    <thead>
+    <tr>
+        <th>Time</th>
+        <th>Type</th>
+        <th>Message</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="e : ${events}">
+        <td th:text="${e.createdAt}"></td>
+        <td th:text="${e.eventType}"></td>
+        <td th:text="${e.message}"></td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

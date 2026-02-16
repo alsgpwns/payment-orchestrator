@@ -1,0 +1,56 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Transactions</title>
+    <style>
+        body { font-family: Arial; margin: 24px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border-bottom: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #f7f7f7; }
+        .muted { color: #777; font-size: 12px; }
+        .pager { margin-top: 16px; }
+        a { text-decoration: none; }
+    </style>
+</head>
+<body>
+<h2>Transactions</h2>
+<div class="muted">Mini VAN Hub 운영 콘솔 (MVP)</div>
+
+<table>
+    <thead>
+    <tr>
+        <th>TxId</th>
+        <th>Status</th>
+        <th>Merchant</th>
+        <th>Amount</th>
+        <th>Currency</th>
+        <th>CreatedAt</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="tx : ${txPage.content}">
+        <td>
+            <a th:href="@{|/admin/transactions/${tx.id}|}" th:text="${tx.id}"></a>
+        </td>
+        <td th:text="${tx.status}"></td>
+        <td th:text="${tx.merchantId}"></td>
+        <td th:text="${tx.amount}"></td>
+        <td th:text="${tx.currency}"></td>
+        <td th:text="${tx.createdAt}"></td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="pager">
+  <span th:if="${txPage.hasPrevious()}">
+    <a th:href="@{|/admin/transactions?page=${txPage.number - 1}|}">Prev</a>
+  </span>
+    <span> Page <span th:text="${txPage.number + 1}"></span> / <span th:text="${txPage.totalPages}"></span> </span>
+    <span th:if="${txPage.hasNext()}">
+    <a th:href="@{|/admin/transactions?page=${txPage.number + 1}|}">Next</a>
+  </span>
+</div>
+
+</body>
+</html>
