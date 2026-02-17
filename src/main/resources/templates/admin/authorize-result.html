@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Authorize Result</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 24px; }
+        .grid { display:grid; grid-template-columns: 180px 1fr; gap:10px; max-width: 900px; }
+        .k { color:#555; }
+        .v { font-weight:600; }
+        .badge { display:inline-block; padding:4px 10px; border-radius:999px; background:#eee; }
+        table { border-collapse: collapse; width: 900px; margin-top: 16px; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        th { background:#f7f7f7; text-align:left; }
+    </style>
+</head>
+<body>
+<h2>승인 결과</h2>
+
+<div class="grid">
+    <div class="k">txId</div><div class="v" th:text="${tx.id}"></div>
+    <div class="k">status</div><div class="v"><span class="badge" th:text="${tx.status}"></span></div>
+    <div class="k">merchantId</div><div class="v" th:text="${tx.merchantId}"></div>
+    <div class="k">amount</div><div class="v" th:text="${tx.amount}"></div>
+    <div class="k">currency</div><div class="v" th:text="${tx.currency}"></div>
+
+    <div class="k">selectedPg</div><div class="v" th:text="${tx.selectedPg}"></div>
+    <div class="k">pgResultCode</div><div class="v" th:text="${tx.pgResultCode}"></div>
+    <div class="k">approvalNo</div><div class="v" th:text="${tx.approvalNo}"></div>
+    <div class="k">failReason</div><div class="v" th:text="${tx.failReason}"></div>
+</div>
+
+<h3 style="margin-top:24px;">이벤트 타임라인</h3>
+<table>
+    <thead>
+    <tr>
+        <th>createdAt</th>
+        <th>eventType</th>
+        <th>message</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="e : ${events}">
+        <td th:text="${e.createdAt}"></td>
+        <td th:text="${e.eventType}"></td>
+        <td th:text="${e.message}"></td>
+    </tr>
+    </tbody>
+</table>
+
+<p style="margin-top:16px;">
+    <a th:href="@{/admin/authorize}">다시 요청</a>
+    &nbsp;|&nbsp;
+    <a th:href="@{/admin/transactions}">거래 목록</a>
+</p>
+</body>
+</html>

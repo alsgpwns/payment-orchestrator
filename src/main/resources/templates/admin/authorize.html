@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Authorize</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 24px; }
+        .card { max-width: 640px; border: 1px solid #ddd; border-radius: 12px; padding: 20px; }
+        .row { margin-bottom: 12px; }
+        label { display:block; margin-bottom: 6px; color:#333; }
+        input { width: 100%; padding: 10px; border:1px solid #ccc; border-radius: 8px; }
+        button { padding: 10px 14px; border:0; border-radius: 10px; cursor:pointer; }
+        .primary { background:#2563eb; color:white; }
+        .hint { color:#666; font-size: 12px; margin-top:6px; }
+    </style>
+</head>
+<body>
+<h2>승인 요청</h2>
+
+<div class="card">
+    <form th:action="@{/admin/authorize}" th:object="${form}" method="post">
+        <div class="row">
+            <label>Idempotency-Key</label>
+            <input th:field="*{idempotencyKey}" placeholder="예: demo-1234 (공백 시 자동생성)"/>
+            <div class="hint">같은 키로 반복 요청하면 같은 txId가 반환되는지 확인용</div>
+        </div>
+
+        <div class="row">
+            <label>merchantId</label>
+            <input th:field="*{merchantId}" />
+        </div>
+
+        <div class="row">
+            <label>amount</label>
+            <input th:field="*{amount}" />
+            <div class="hint">1000원 이하 금액은 거절, 예: 1000(승인), 999(거절)</div>
+        </div>
+
+        <div class="row">
+            <label>currency</label>
+            <input th:field="*{currency}" />
+        </div>
+
+        <button class="primary" type="submit">승인 요청 보내기</button>
+    </form>
+</div>
+
+<p style="margin-top:16px;">
+    <a th:href="@{/admin/transactions}">거래 목록으로</a>
+</p>
+</body>
+</html>

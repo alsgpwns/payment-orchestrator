@@ -26,6 +26,10 @@
         <th>Amount</th>
         <th>Currency</th>
         <th>CreatedAt</th>
+        <th>SelectedPg</th>
+        <th>PgResultCode</th>
+        <th>ApprovalNo</th>
+        <th>FailReason</th>
     </tr>
     </thead>
     <tbody>
@@ -38,6 +42,11 @@
         <td th:text="${tx.amount}"></td>
         <td th:text="${tx.currency}"></td>
         <td th:text="${tx.createdAt}"></td>
+        <td th:text="${tx.selectedPg}"></td>
+        <td th:text="${tx.pgResultCode}"></td>
+        <td th:text="${tx.approvalNo}"></td>
+        <td th:text="${tx.failReason}"></td>
+
     </tr>
     </tbody>
 </table>

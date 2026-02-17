@@ -5,11 +5,23 @@
     <title>Transaction Detail</title>
     <style>
         body { font-family: Arial; margin: 24px; }
-        .box { border: 1px solid #eee; padding: 16px; border-radius: 8px; margin-bottom: 18px; }
+        a { text-decoration: none; }
+        h2 { margin-top: 12px; }
+        .box { border: 1px solid #eee; padding: 16px; border-radius: 10px; margin-bottom: 18px; background: #fff; }
         .muted { color: #777; font-size: 12px; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border-bottom: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background: #f7f7f7; }
+        .badge { display:inline-block; padding:4px 10px; border-radius:999px; background:#eee; font-weight:700; }
+
+        /* key-value table */
+        .kv { width: 100%; border-collapse: collapse; }
+        .kv th, .kv td { padding: 10px 12px; border-bottom: 1px solid #eee; vertical-align: top; }
+        .kv th { width: 180px; text-align: left; color: #555; background: #fafafa; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+        .wrap { word-break: break-all; }
+
+        /* events table */
+        table.events { border-collapse: collapse; width: 100%; }
+        table.events th, table.events td { border-bottom: 1px solid #ddd; padding: 10px; text-align: left; }
+        table.events th { background: #f7f7f7; }
     </style>
 </head>
 <body>
@@ -19,27 +31,71 @@
 <h2>Transaction Detail</h2>
 
 <div class="box">
-    <div><b>TxId</b> : <span th:text="${tx.id}"></span></div>
-    <div><b>Status</b> : <span th:text="${tx.status}"></span></div>
-    <div><b>Merchant</b> : <span th:text="${tx.merchantId}"></span></div>
-    <div><b>Amount</b> : <span th:text="${tx.amount}"></span> <span th:text="${tx.currency}"></span></div>
-    <div class="muted"><b>CreatedAt</b> : <span th:text="${tx.createdAt}"></span></div>
+    <table class="kv">
+        <tr>
+            <th>TxId</th>
+            <td class="mono wrap" th:text="${tx.id}"></td>
+        </tr>
+        <tr>
+            <th>Status</th>
+            <td><span class="badge" th:text="${tx.status}"></span></td>
+        </tr>
+        <tr>
+            <th>Merchant</th>
+            <td th:text="${tx.merchantId}"></td>
+        </tr>
+        <tr>
+            <th>Amount</th>
+            <td><span th:text="${tx.amount}"></span> <span th:text="${tx.currency}"></span></td>
+        </tr>
+
+        <tr>
+            <th>SelectedPg</th>
+            <td th:text="${tx.selectedPg}"></td>
+        </tr>
+        <tr>
+            <th>PgResultCode</th>
+            <td th:text="${tx.pgResultCode}"></td>
+        </tr>
+        <tr>
+            <th>ApprovalNo</th>
+            <td class="mono" th:text="${tx.approvalNo}"></td>
+        </tr>
+        <tr>
+            <th>FailReason</th>
+            <td class="wrap" th:text="${tx.failReason}"></td>
+        </tr>
+
+        <tr>
+            <th>RoutedAt</th>
+            <td class="muted mono" th:text="${tx.routedAt}"></td>
+        </tr>
+        <tr>
+            <th>AuthorizedAt</th>
+            <td class="muted mono" th:text="${tx.authorizedAt}"></td>
+        </tr>
+        <tr>
+            <th>CreatedAt</th>
+            <td class="muted mono" th:text="${tx.createdAt}"></td>
+        </tr>
+    </table>
 </div>
 
 <h3>Event Timeline</h3>
-<table>
+
+<table class="events">
     <thead>
     <tr>
-        <th>Time</th>
-        <th>Type</th>
+        <th style="width:260px;">Time</th>
+        <th style="width:220px;">Type</th>
         <th>Message</th>
     </tr>
     </thead>
     <tbody>
     <tr th:each="e : ${events}">
-        <td th:text="${e.createdAt}"></td>
+        <td class="mono" th:text="${e.createdAt}"></td>
         <td th:text="${e.eventType}"></td>
-        <td th:text="${e.message}"></td>
+        <td class="wrap" th:text="${e.message}"></td>
     </tr>
     </tbody>
 </table>
