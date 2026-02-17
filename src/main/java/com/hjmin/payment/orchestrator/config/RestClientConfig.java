@@ -1,5 +1,6 @@
 package com.hjmin.payment.orchestrator.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
@@ -8,9 +9,9 @@ import org.springframework.web.client.RestClient;
 public class RestClientConfig {
 
     @Bean
-    public RestClient restClient() {
+    public RestClient restClient(@Value("${external.pg.base-url}") String baseUrl) {
         return RestClient.builder()
-                .baseUrl("http://localhost:8081") // pg-mock 포트
+                .baseUrl(baseUrl)
                 .build();
     }
 }

@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface TxEventRepository extends JpaRepository<TxEvent, Long> {
     List<TxEvent> findByTxIdOrderByCreatedAtAsc(UUID txId);
+    List<TxEvent> findAllByTxIdOrderByCreatedAtAsc(UUID txId);
 }

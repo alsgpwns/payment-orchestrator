@@ -40,6 +40,19 @@ public class Transaction {
     @Column(nullable = false)
     private Instant updatedAt;
 
+    @Column(length = 10)
+    private String pgResultCode;
+
+    @Column(length = 50)
+    private String approvalNo;
+
+    @Column(length = 500)
+    private String failReason;
+
+    private Instant routedAt;
+    private Instant authorizedAt;
+
+
     protected Transaction() {}
 
     public static Transaction create(String merchantId, long amount, String currency, String idempotencyKey) {
@@ -64,6 +77,13 @@ public class Transaction {
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 
+    public String getPgResultCode() { return pgResultCode; }
+    public String getApprovalNo() { return approvalNo; }
+    public String getFailReason() { return failReason; }
+    public Instant getRoutedAt() { return routedAt; }
+    public Instant getAuthorizedAt() { return authorizedAt; }
+
+
     @PrePersist
     void onCreate() {
         this.createdAt = Instant.now();
@@ -77,17 +97,38 @@ public class Transaction {
 
     public void routedTo(String pg) {
         this.selectedPg = pg;
-        this.status = TxStatus.ROUTED;
-        this.updatedAt = Instant.now();
+        this.status = TxStatus.ROUTED_TO_EXTERNAL;
+        this.routedAt = Instant.now();
+    }
+    public void applyExternalResponse(String pgResultCode, String approvalNo) {
+        this.status = TxStatus.EXTERNAL_RESPONSE;
+        this.pgResultCode = pgResultCode;
+        this.approvalNo = approvalNo;
     }
 
     public void authorized() {
         this.status = TxStatus.AUTHORIZED;
-        this.updatedAt = Instant.now();
     }
 
     public void failed() {
         this.status = TxStatus.FAILED;
-        this.updatedAt = Instant.now();
     }
+
+    public void authorized(String pgResultCode, String approvalNo) {
+        this.status = TxStatus.AUTHORIZED;
+        this.pgResultCode = pgResultCode;
+        this.approvalNo = approvalNo;
+        this.failReason = null;
+        this.authorizedAt = Instant.now();
+    }
+
+    public void failed(String pgResultCode, String failReason) {
+        this.status = TxStatus.FAILED;
+        this.pgResultCode = pgResultCode;
+        this.failReason = failReason;
+        this.approvalNo = null;
+    }
+
+
+
 }
