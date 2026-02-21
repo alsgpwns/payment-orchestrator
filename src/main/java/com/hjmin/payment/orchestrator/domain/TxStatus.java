@@ -5,5 +5,9 @@ public enum TxStatus {
     ROUTED_TO_EXTERNAL,
     EXTERNAL_RESPONSE,
     AUTHORIZED,
-    FAILED
+    FAILED,
+
+    CANCEL_REQUESTED,
+    CANCELED,
+    CANCEL_FAILED
 }

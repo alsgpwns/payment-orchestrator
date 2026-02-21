@@ -1,16 +1,22 @@
 package com.hjmin.payment.orchestrator.api;
 
+import com.hjmin.payment.orchestrator.app.PaymentOrchestratorService;
 import com.hjmin.payment.orchestrator.domain.Transaction;
 import com.hjmin.payment.orchestrator.domain.TxEvent;
 import com.hjmin.payment.orchestrator.domain.TxEventType;
+import com.hjmin.payment.orchestrator.domain.TxStatus;
 import com.hjmin.payment.orchestrator.infra.ExternalPgClient;
 import com.hjmin.payment.orchestrator.infra.TransactionRepository;
 import com.hjmin.payment.orchestrator.infra.TxEventRepository;
+import com.hjmin.payment.orchestrator.infra.external.dto.PgCancelRequest;
+import com.hjmin.payment.orchestrator.infra.external.dto.PgCancelResponse;
+import com.zaxxer.hikari.pool.HikariProxyCallableStatement;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -23,10 +29,13 @@ public class PaymentApiController {
     private final TransactionRepository txRepo;
     private final TxEventRepository eventRepo;
     private final ExternalPgClient externalPgClient;
-    public PaymentApiController(TransactionRepository txRepo, TxEventRepository eventRepo, ExternalPgClient externalPgClient) {
+
+    private final PaymentOrchestratorService paymentService;
+    public PaymentApiController(TransactionRepository txRepo, TxEventRepository eventRepo, ExternalPgClient externalPgClient, PaymentOrchestratorService paymentService) {
         this.txRepo = txRepo;
         this.eventRepo = eventRepo;
         this.externalPgClient = externalPgClient;
+        this.paymentService = paymentService;
     }
 
     @PostMapping("/authorize")
@@ -91,6 +100,15 @@ public class PaymentApiController {
     }
 
 
+    @PostMapping("/{txId}/cancel")
+    public ResponseEntity<CancelResponse> cancel(
+            @PathVariable UUID txId,
+            @RequestHeader("Idempotency-Key") String idempotencyKey
+    ) {
+        CancelResponse res = paymentService.cancel(txId, idempotencyKey);
+        return ResponseEntity.ok(res);
+    }
+
     public record AuthorizeRequest(
             @NotBlank String merchantId,
             @Min(1) long amount,
@@ -140,6 +158,8 @@ public class PaymentApiController {
             );
         }
     }
+
+
 
     public record EventResponse(
             String eventType,

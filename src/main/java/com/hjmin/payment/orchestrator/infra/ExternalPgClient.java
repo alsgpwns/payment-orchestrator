@@ -1,5 +1,7 @@
 package com.hjmin.payment.orchestrator.infra;
 
+import com.hjmin.payment.orchestrator.infra.external.dto.PgCancelRequest;
+import com.hjmin.payment.orchestrator.infra.external.dto.PgCancelResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -20,6 +22,15 @@ public class ExternalPgClient {
                 .retrieve()
                 .body(PgResponse.class);
     }
+
+    public PgCancelResponse cancel(PgCancelRequest req) {
+        return restClient.post()
+                .uri("/pg/cancel")
+                .body(req)
+                .retrieve()
+                .body(PgCancelResponse.class);
+    }
+
 
     public record PgRequest(String merchantId, long amount, String currency) {}
     public record PgResponse(String resultCode, String approvalNo, String message) {}

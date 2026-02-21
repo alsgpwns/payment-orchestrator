@@ -22,6 +22,9 @@
         table.events { border-collapse: collapse; width: 100%; }
         table.events th, table.events td { border-bottom: 1px solid #ddd; padding: 10px; text-align: left; }
         table.events th { background: #f7f7f7; }
+
+        button { padding: 8px 12px; border: 1px solid #ddd; background: #f7f7f7; border-radius: 8px; cursor: pointer; }
+        button:hover { background: #eee; }
     </style>
 </head>
 <body>
@@ -39,6 +42,19 @@
         <tr>
             <th>Status</th>
             <td><span class="badge" th:text="${tx.status}"></span></td>
+        </tr>
+        <tr>
+            <th>Actions</th>
+            <td>
+                <button type="button"
+                        th:if="${tx.status.toString() == 'AUTHORIZED'}"
+                        th:attr="onclick=|cancelTx('${tx.id}')|">
+                    Cancel
+                </button>
+                <span class="muted" th:if="${tx.status.toString() != 'AUTHORIZED'}">
+            Cancel is available only when status is AUTHORIZED.
+        </span>
+            </td>
         </tr>
         <tr>
             <th>Merchant</th>
@@ -64,6 +80,18 @@
         <tr>
             <th>FailReason</th>
             <td class="wrap" th:text="${tx.failReason}"></td>
+        </tr>
+        <tr>
+            <th>CancelResultCode</th>
+            <td th:text="${tx.cancelResultCode}"></td>
+        </tr>
+        <tr>
+            <th>CancelReason</th>
+            <td class="wrap" th:text="${tx.cancelReason}"></td>
+        </tr>
+        <tr>
+            <th>CanceledAt</th>
+            <td class="muted mono" th:text="${tx.canceledAt}"></td>
         </tr>
 
         <tr>
@@ -99,6 +127,28 @@
     </tr>
     </tbody>
 </table>
+<script>
+    async function cancelTx(txId) {
+        const key = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ("idem-" + Date.now());
+
+        const res = await fetch(`/api/v1/payments/${txId}/cancel`, {
+            method: 'POST',
+            headers: {
+                'Idempotency-Key': key
+            }
+        });
+
+        if (!res.ok) {
+            const text = await res.text();
+            alert(`Cancel failed: HTTP ${res.status}\n${text}`);
+            return;
+        }
+
+        const data = await res.json();
+        alert(`Cancel result\nstatus=${data.status}\ncode=${data.cancelResultCode}`);
+        location.reload();
+    }
+</script>
 
 </body>
 </html>

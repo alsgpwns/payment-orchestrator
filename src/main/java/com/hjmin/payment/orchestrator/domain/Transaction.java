@@ -1,6 +1,8 @@
 package com.hjmin.payment.orchestrator.domain;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+
 import java.time.Instant;
 import java.util.UUID;
 
@@ -11,19 +13,24 @@ import java.util.UUID;
 })
 public class Transaction {
 
+    @Getter
     @Id
     @GeneratedValue
     private UUID id;
 
+    @Getter
     @Column(nullable = false, length = 50)
     private String merchantId;
 
+    @Getter
     @Column(nullable = false)
     private long amount;
 
+    @Getter
     @Column(nullable = false, length = 3)
     private String currency;
 
+    @Getter
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private TxStatus status;
@@ -31,25 +38,50 @@ public class Transaction {
     @Column(nullable = false, length = 80, unique = true)
     private String idempotencyKey;
 
+    @Getter
     @Column(length = 10)
     private String selectedPg;
 
+    @Getter
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Getter
     @Column(nullable = false)
     private Instant updatedAt;
 
+    @Getter
     @Column(length = 10)
     private String pgResultCode;
 
+    @Getter
     @Column(length = 50)
     private String approvalNo;
 
+    @Getter
     @Column(length = 500)
     private String failReason;
 
+    // cancel fields
+    @Getter
+    @Column(name = "cancel_idempotency_key")
+    private String cancelIdempotencyKey;
+
+    @Getter
+    @Column(name = "cancel_result_code")
+    private String cancelResultCode;
+
+    @Getter
+    @Column(name = "cancel_reason")
+    private String cancelReason;
+
+    @Getter
+    @Column(name = "canceled_at")
+    private Instant canceledAt;
+
+    @Getter
     private Instant routedAt;
+    @Getter
     private Instant authorizedAt;
 
 
@@ -66,22 +98,6 @@ public class Transaction {
         tx.updatedAt = tx.createdAt;
         return tx;
     }
-
-    public UUID getId() { return id; }
-    public String getMerchantId() { return merchantId; }
-    public long getAmount() { return amount; }
-    public String getCurrency() { return currency; }
-    public TxStatus getStatus() { return status; }
-    public String getIdempotencyKey() { return idempotencyKey; }
-    public String getSelectedPg() { return selectedPg; }
-    public Instant getCreatedAt() { return createdAt; }
-    public Instant getUpdatedAt() { return updatedAt; }
-
-    public String getPgResultCode() { return pgResultCode; }
-    public String getApprovalNo() { return approvalNo; }
-    public String getFailReason() { return failReason; }
-    public Instant getRoutedAt() { return routedAt; }
-    public Instant getAuthorizedAt() { return authorizedAt; }
 
 
     @PrePersist
@@ -128,6 +144,51 @@ public class Transaction {
         this.failReason = failReason;
         this.approvalNo = null;
     }
+
+
+    public void assertCancelable() {
+        if (this.status != TxStatus.AUTHORIZED
+                && this.status != TxStatus.CANCEL_REQUESTED
+                && this.status != TxStatus.CANCELED
+                && this.status != TxStatus.CANCEL_FAILED) {
+            throw new IllegalStateException("Not cancelable. current=" + this.status);
+        }
+    }
+
+    public boolean isCancelTerminal() {
+        return this.status == TxStatus.CANCELED || this.status == TxStatus.CANCEL_FAILED;
+    }
+
+    public void requestCancel(String idempotencyKey) {
+        // 최초 cancel 요청만 키를 박아둠
+        if (this.cancelIdempotencyKey == null) {
+            this.cancelIdempotencyKey = idempotencyKey;
+        }
+        this.status = TxStatus.CANCEL_REQUESTED;
+    }
+
+    public void canceled(String cancelResultCode, String cancelReason) {
+        this.status = TxStatus.CANCELED;
+        this.cancelResultCode = cancelResultCode;
+        this.cancelReason = cancelReason;
+        this.canceledAt = Instant.now();
+    }
+
+    public void cancelFailed(String cancelResultCode, String cancelReason) {
+        this.status = TxStatus.CANCEL_FAILED;
+        this.cancelResultCode = cancelResultCode;
+        this.cancelReason = cancelReason;
+    }
+
+    public void verifyCancelIdempotencyKey(String incomingKey) {
+        // 이미 cancelIdempotencyKey가 있는데 다른 키로 “진행 중 cancel”을 또 때리면 정책적으로 막는 게 안전
+        if (this.status == TxStatus.CANCEL_REQUESTED
+                && this.cancelIdempotencyKey != null
+                && !this.cancelIdempotencyKey.equals(incomingKey)) {
+            throw new IllegalStateException("Cancel already in progress with different Idempotency-Key");
+        }
+    }
+
 
 
 
