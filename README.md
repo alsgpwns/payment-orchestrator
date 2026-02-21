@@ -10,18 +10,21 @@ Payment Orchestrator는 가맹점의 승인 요청을 받아 외부 PG로 라우
 
 구현 포인트:
 
-* Idempotency-Key 기반 중복 승인 방지(DB Unique + 조회 기반)
-* TxStatus 상태전이 및 주요 단계별 TxEvent 기록(CREATED → ROUTED_TO_EXTERNAL → EXTERNAL_RESPONSE → AUTHORIZED/FAILED)
+* 승인 Idempotency-Key 기반 중복 승인 방지(DB Unique + 조회 기반)
+* 취소 Idempotency 처리(cancel_idempotency_key)로 중복 취소/재시도 제어
+* TxStatus 상태전이 및 주요 단계별 TxEvent 기록
+  - Authorize: CREATED → ROUTED_TO_EXTERNAL → EXTERNAL_RESPONSE → AUTHORIZED/FAILED
+  - Cancel: AUTHORIZED → CANCEL_REQUESTED → ROUTED_CANCEL_TO_EXTERNAL → EXTERNAL_CANCEL_RESPONSE → CANCELED/CANCEL_FAILED
 * Admin Console(Thymeleaf)에서 승인 요청/결과/거래 상세/이벤트 타임라인까지 웹으로 확인
-* pg-mock으로 승인/거절 시나리오를 재현 가능하게 구성
+* pg-mock으로 승인/거절 및 취소 시나리오를 재현 가능하게 구성
 
 ---
 
 ## Architecture (Local)
 
-Merchant/Admin UI
-→ payment-orchestrator (Spring Boot, 8080)
-→ PostgreSQL (transactions + tx_events)
+Merchant/Admin UI  
+→ payment-orchestrator (Spring Boot, 8080)  
+→ PostgreSQL (transactions + tx_events) / Redis (Docker Compose)  
 → pg-mock (Spring Boot, 8081)
 
 ---
@@ -40,6 +43,10 @@ Merchant/Admin UI
 
 ## How to Run
 
+### 0) Run Infra (PostgreSQL, Redis)
+```bash
+docker compose up -d
+
 ### 1) Run payment-orchestrator
 
 ```bash
@@ -57,6 +64,19 @@ Ports:
 
 * Orchestrator: [http://localhost:8080](http://localhost:8080)
 * PG Mock: [http://localhost:8081](http://localhost:8081)
+
+---
+
+## Key Endpoints
+
+### Payment API
+* POST /api/v1/payments/authorize
+* POST /api/v1/payments/{txId}/cancel
+
+### Admin Console
+* GET /admin/transactions
+* GET/POST /admin/authorize
+* GET /admin/transactions/{txId}
 
 ---
 
@@ -79,15 +99,22 @@ Invoke-RestMethod `
   -Headers $headers `
   -ContentType "application/json" `
   -Body $body
+
+$headers = @{ "Idempotency-Key" = "cancel-1234" }
+
+Invoke-RestMethod `
+  -Method Post `
+  -Uri "http://localhost:8080/api/v1/payments/<txId>/cancel" `
+  -Headers $headers
 ```
 
 ---
 
 ## Idempotency Behavior
 
-- 동일한 `Idempotency-Key`로 요청하면 기존 거래를 조회해 동일한 `txId`와 동일한 응답을 반환합니다.
-- 따라서 같은 키로 `amount` 등 요청 값을 변경해도 최초 생성된 거래가 우선됩니다(중복 승인 방지 목적의 정책).
-
+- 동일한 Idempotency-Key로 승인 요청하면 기존 거래를 조회해 동일한 txId와 동일한 응답을 반환합니다.
+- 따라서 같은 키로 amount 등 요청 값을 변경해도 최초 생성된 거래가 우선됩니다(중복 승인 방지 목적의 정책).
+- 취소는 cancel_idempotency_key로 중복 취소/재시도를 제어하며, 진행 중 다른 키 요청은 정책적으로 차단할 수 있습니다.
 ---
 
 ## Admin Console
@@ -102,7 +129,7 @@ Invoke-RestMethod `
 제공 기능:
 
 * 승인 요청 → 결과 화면(tx + events 타임라인)
-* 거래 목록에서 상태/PG 결과 코드/승인번호/실패사유 확인(포폴 캡쳐 포인트)
+* 거래 목록에서 상태/PG 결과 코드/승인번호/실패사유/취소결과 확인
 * 거래 상세에서 이벤트 타임라인으로 단계별 근거 추적
 
 ---
@@ -133,8 +160,8 @@ Invoke-RestMethod `
 
 ### 1) Idempotency (Duplicate Authorization Prevention)
 
-* Header 기반 Idempotency-Key
-* DB unique + 조회 기반으로 중복 거래 생성 방지
+* 승인: Header 기반 Idempotency-Key + DB unique + 조회 기반으로 중복 거래 생성 방지
+* 취소: cancel_idempotency_key로 중복 취소/재시도 제어
 
 ### 2) State Transition + Audit Trail
 
@@ -149,7 +176,7 @@ Invoke-RestMethod `
 
 ## Next Steps
 
-* Redis 기반 Idempotency 저장/TTL 정책 확장(선택)
+* Redis 기반 Idempotency 저장/TTL 정책 확장
 * 외부 연동 장애 대응(Timeout/Retry/Backoff, Circuit Breaker)
 * Observability: metrics/log correlation, tracing 확장
 * 상태 머신/정책(같은 키 + 다른 payload 처리) 고도화
@@ -158,10 +185,10 @@ Invoke-RestMethod `
 
 ## Why This Project
 
-실제 결제/금융 트랜잭션에서 중요한
+실제 결제/금융 트랜잭션에서 중요한을 “운영 가능한 형태”로 구현하는 것을 목표로 했습니다.
 
 * 정합성(중복 승인 방지)
 * 상태 전이 관리
 * 운영 가시성(근거 로그/타임라인)
 
-을 “운영 가능한 형태”로 구현하는 것을 목표로 했습니다.
+
