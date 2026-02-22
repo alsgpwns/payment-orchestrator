@@ -181,15 +181,13 @@ public class Transaction {
     }
 
     public void verifyCancelIdempotencyKey(String incomingKey) {
-        // 이미 cancelIdempotencyKey가 있는데 다른 키로 “진행 중 cancel”을 또 때리면 정책적으로 막는 게 안전
+        // 이미 cancelIdempotencyKey가 있는데 다른 키로 “진행 중 cancel”을 또 실행시 정책적으로 막는 게 안전
         if (this.status == TxStatus.CANCEL_REQUESTED
                 && this.cancelIdempotencyKey != null
                 && !this.cancelIdempotencyKey.equals(incomingKey)) {
             throw new IllegalStateException("Cancel already in progress with different Idempotency-Key");
         }
     }
-
-
 
 
 }

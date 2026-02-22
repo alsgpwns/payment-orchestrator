@@ -64,13 +64,8 @@ public class PaymentApiController {
 
         // 2. PG 호출
         var pgResponse = externalPgClient.authorize(
-                new ExternalPgClient.PgRequest(
-                        tx.getMerchantId(),
-                        tx.getAmount(),
-                        tx.getCurrency()
-                )
+                new ExternalPgClient.PgRequest(tx.getId(), tx.getMerchantId(), tx.getAmount(), tx.getCurrency())
         );
-
         eventRepo.save(TxEvent.of(tx.getId(), TxEventType.EXTERNAL_RESPONSE,
                 "PG resultCode=" + pgResponse.resultCode()));
 

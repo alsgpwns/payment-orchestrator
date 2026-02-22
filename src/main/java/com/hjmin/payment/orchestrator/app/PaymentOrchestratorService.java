@@ -46,7 +46,7 @@ public class PaymentOrchestratorService {
 
         // 4) 외부 호출
         var pgRes = externalPgClient.authorize(
-                new ExternalPgClient.PgRequest(tx.getMerchantId(), tx.getAmount(), tx.getCurrency())
+                new ExternalPgClient.PgRequest(tx.getId(), tx.getMerchantId(), tx.getAmount(), tx.getCurrency())
         );
 
         // 4-1) EXTERNAL_RESPONSE 상태 + 이벤트

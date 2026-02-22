@@ -38,7 +38,6 @@ public class TxEvent {
         e.createdAt = Instant.now();
         return e;
     }
-
     public Long getId() { return id; }
     public UUID getTxId() { return txId; }
     public TxEventType getEventType() { return eventType; }

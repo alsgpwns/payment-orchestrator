@@ -5,6 +5,8 @@ import com.hjmin.payment.orchestrator.infra.external.dto.PgCancelResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.util.UUID;
+
 @Component
 public class ExternalPgClient {
 
@@ -32,6 +34,6 @@ public class ExternalPgClient {
     }
 
 
-    public record PgRequest(String merchantId, long amount, String currency) {}
+    public record PgRequest(UUID txId, String merchantId, long amount, String currency) {}
     public record PgResponse(String resultCode, String approvalNo, String message) {}
 }
